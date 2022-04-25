@@ -1,8 +1,8 @@
-import { Category } from "../model/Category";
+import { Category } from "../../model/Category";
 import {
     ICategoriesRepository,
     ICreateCategoryDTO,
-} from "./ICategoriesRepository";
+} from "../ICategoriesRepository";
 
 // Objeto responsável por fazer a transferência de dados entre uma classe e outra.
 class CategoriesRepository implements ICategoriesRepository {
