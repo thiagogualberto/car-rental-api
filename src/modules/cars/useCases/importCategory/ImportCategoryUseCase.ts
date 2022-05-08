@@ -1,21 +1,50 @@
 import { parse as csvParse } from "csv-parse";
 import fs from "fs";
 
+import { ICategoriesRepository } from "../../repositories/ICategoriesRepository";
+
+interface IImportCategory {
+    name: string;
+    description: string;
+}
 class ImportCategoryUseCase {
-    // Recebe o arquivo vindo do controller.
-    execute(file: Express.Multer.File): void {
-        // Cria um stream de leitura do arquivo.
-        const stream = fs.createReadStream(file.path);
+    constructor(private categoriesRepository: ICategoriesRepository) { }
 
-        // Responsável por ler linha por linha do arquivo através do console.log abaixo
-        const parseFile = csvParse();
+    loadCategories(file: Express.Multer.File): Promise<IImportCategory[]> {
+        return new Promise((resolve, reject) => {
+            // Cria um stream de leitura do arquivo.
+            const stream = fs.createReadStream(file.path);
 
-        // Passa pedaços do arquivo para o 'parseFile'
-        stream.pipe(parseFile);
+            const categories: IImportCategory[] = [];
 
-        parseFile.on("data", async line => {
-            console.log(line);
+            // Responsável por ler linha por linha do arquivo através do console.log abaixo
+            const parseFile = csvParse();
+
+            // Passa pedaços do arquivo para o 'parseFile'
+            stream.pipe(parseFile);
+
+            parseFile
+                .on("data", async line => {
+                    const [name, description] = line;
+
+                    categories.push({
+                        name,
+                        description,
+                    });
+                })
+                .on("end", () => {
+                    resolve(categories);
+                })
+                .on("error", err => {
+                    resolve(err);
+                });
         });
+    }
+
+    // Recebe o arquivo vindo do controller.
+    async execute(file: Express.Multer.File): Promise<void> {
+        const categories = await this.loadCategories(file);
+        console.log(categories);
     }
 }
 
